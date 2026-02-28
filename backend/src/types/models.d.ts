@@ -7,6 +7,8 @@ export interface UserAttributes {
   updatedAt?: Date;
 }
 
+export type UserWithoutPassword = Omit<UserAttributes, 'password'>;
+
 export interface UserCreationAttributes {
   username: string;
   email: string;

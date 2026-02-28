@@ -25,9 +25,10 @@ export const generateToken = (userId: string, email: string): string => {
     userId,
     email,
   };
+  // JWT_EXPIRES_IN is a string like "24h" which is valid for jwt.sign
   const token = jwt.sign(payload, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
-  });
+  } as jwt.SignOptions);
   return token;
 };
 

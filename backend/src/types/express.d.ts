@@ -1,10 +1,10 @@
 import { Request } from 'express';
-import { UserAttributes } from './models';
+import { UserWithoutPassword } from './models';
 
 declare global {
   namespace Express {
     interface Request {
-      user?: UserAttributes;
+      user?: UserWithoutPassword;
     }
   }
 }
