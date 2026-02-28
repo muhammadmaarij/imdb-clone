@@ -8,12 +8,23 @@
       </div>
       <div class="info-section">
         <h1 class="page-title-large">{{ movie.title }}</h1>
-        <p class="release-date text-secondary">{{ formatDate(movie.releaseDate) }}</p>
+        <p class="release-date text-secondary">
+          {{ formatDate(movie.releaseDate) }}
+        </p>
         <p class="description">{{ movie.description }}</p>
-        <div v-if="movie.reviewCount !== undefined" class="stats text-secondary">
-          <span>{{ movie.reviewCount }} {{ movie.reviewCount === 1 ? 'review' : 'reviews' }}</span>
+        <div
+          v-if="movie.reviewCount !== undefined"
+          class="stats text-secondary"
+        >
+          <span
+            >{{ movie.reviewCount }}
+            {{ movie.reviewCount === 1 ? "review" : "reviews" }}</span
+          >
         </div>
-        <div v-if="authStore.isAuthenticated && isOwner" class="actions flex gap-md">
+        <div
+          v-if="authStore.isAuthenticated && isOwner"
+          class="actions flex gap-md"
+        >
           <Button variant="secondary" @click="handleEdit" label="Edit Movie" />
           <Button variant="danger" @click="handleDelete" label="Delete Movie" />
         </div>
@@ -36,26 +47,46 @@
     <div class="reviews-section">
       <h2 class="section-title">Reviews</h2>
       <div v-if="reviews.length === 0" class="empty-state">
-        <p>No reviews yet. Be the first to review!</p>
+        <p>No reviews yet.</p>
       </div>
       <div v-else class="reviews-list">
-        <div v-for="review in reviews" :key="review.id" class="review-item card">
+        <div
+          v-for="review in reviews"
+          :key="review.id"
+          class="review-item card"
+        >
           <div class="review-header flex-between">
             <div class="flex gap-md">
-              <span class="reviewer-name">{{ review.user?.username || 'Anonymous' }}</span>
+              <span class="reviewer-name">{{
+                review.user?.username || "Anonymous"
+              }}</span>
               <div class="rating">
-                <span v-for="i in 5" :key="i" class="star" :class="{ filled: i <= review.rating }">
+                <span
+                  v-for="i in 5"
+                  :key="i"
+                  class="star"
+                  :class="{ filled: i <= review.rating }"
+                >
                   ★
                 </span>
               </div>
             </div>
-            <div v-if="isReviewOwner(review)" class="review-actions flex gap-sm">
+            <div
+              v-if="isReviewOwner(review)"
+              class="review-actions flex gap-sm"
+            >
               <Button variant="link" @click="editReview(review)" label="Edit" />
-              <Button variant="link" @click="deleteReview(review.id)" label="Delete" />
+              <Button
+                variant="link"
+                @click="deleteReview(review.id)"
+                label="Delete"
+              />
             </div>
           </div>
           <p class="review-comment">{{ review.comment }}</p>
-          <p class="review-date text-secondary">{{ formatDate(review.createdAt || '') }}</p>
+          <p class="review-date text-secondary">
+            {{ formatDate(review.createdAt || "") }}
+          </p>
         </div>
       </div>
 
@@ -80,15 +111,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useMoviesStore } from '../../stores/movies';
-import { useAuthStore } from '../../stores/auth';
-import ReviewForm from '../../components/ReviewForm/ReviewForm.vue';
-import MovieModal from '../../components/MovieModal/MovieModal.vue';
-import Button from '../../components/common/Button/Button.vue';
-import api from '../../services/api';
-import './MovieDetails.css';
+import { ref, computed, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useMoviesStore } from "../../stores/movies";
+import { useAuthStore } from "../../stores/auth";
+import ReviewForm from "../../components/ReviewForm/ReviewForm.vue";
+import MovieModal from "../../components/MovieModal/MovieModal.vue";
+import Button from "../../components/common/Button/Button.vue";
+import api from "../../services/api";
+import "./MovieDetails.css";
 
 interface Movie {
   id: string;
@@ -131,7 +162,11 @@ const editingMovie = ref<Movie | null>(null);
 const showEditModal = ref<boolean>(false);
 
 const isOwner = computed(() => {
-  return authStore.isAuthenticated && movie.value && movie.value.userId === authStore.user?.id;
+  return (
+    authStore.isAuthenticated &&
+    movie.value &&
+    movie.value.userId === authStore.user?.id
+  );
 });
 
 onMounted(async () => {
@@ -144,7 +179,7 @@ const loadMovie = async (): Promise<void> => {
     await moviesStore.fetchMovieById(route.params.id as string);
     movie.value = moviesStore.currentMovie;
   } catch (error) {
-    console.error('Failed to load movie:', error);
+    console.error("Failed to load movie:", error);
   } finally {
     loading.value = false;
   }
@@ -152,29 +187,31 @@ const loadMovie = async (): Promise<void> => {
 
 const loadReviews = async (): Promise<void> => {
   try {
-    const response = await api.get<{ data: Review[] }>(`/reviews/movie/${route.params.id}`);
+    const response = await api.get<{ data: Review[] }>(
+      `/reviews/movie/${route.params.id}`
+    );
     reviews.value = response.data.data;
   } catch (error) {
-    console.error('Failed to load reviews:', error);
+    console.error("Failed to load reviews:", error);
   }
 };
 
 const formatDate = (date: string): string => {
-  if (!date) return '';
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+  if (!date) return "";
+  return new Date(date).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 };
 
 const getEmbedUrl = (url: string): string => {
-  if (url.includes('youtube.com/watch')) {
-    const videoId = url.split('v=')[1]?.split('&')[0];
+  if (url.includes("youtube.com/watch")) {
+    const videoId = url.split("v=")[1]?.split("&")[0];
     return `https://www.youtube.com/embed/${videoId}`;
   }
-  if (url.includes('youtu.be/')) {
-    const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+  if (url.includes("youtu.be/")) {
+    const videoId = url.split("youtu.be/")[1]?.split("?")[0];
     return `https://www.youtube.com/embed/${videoId}`;
   }
   return url;
@@ -197,10 +234,10 @@ const handleMovieSaved = async (): Promise<void> => {
 };
 
 const handleDelete = async (): Promise<void> => {
-  if (movie.value && confirm('Are you sure you want to delete this movie?')) {
+  if (movie.value && confirm("Are you sure you want to delete this movie?")) {
     const result = await moviesStore.deleteMovie(movie.value.id);
     if (result.success) {
-      router.push('/');
+      router.push("/");
     }
   }
 };
@@ -214,12 +251,12 @@ const isReviewOwner = (review: Review): boolean => {
 };
 
 const deleteReview = async (reviewId: string): Promise<void> => {
-  if (confirm('Are you sure you want to delete this review?')) {
+  if (confirm("Are you sure you want to delete this review?")) {
     try {
       await api.delete(`/reviews/${reviewId}`);
       await loadReviews();
     } catch (error) {
-      console.error('Failed to delete review:', error);
+      console.error("Failed to delete review:", error);
     }
   }
 };

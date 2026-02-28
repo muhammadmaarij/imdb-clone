@@ -6,10 +6,12 @@
         <div class="nav-links">
           <router-link to="/" class="nav-link">Home</router-link>
           <template v-if="authStore.isAuthenticated">
-            <span class="nav-link">{{ authStore.user?.username }}</span>
-            <button @click="handleLogout" class="nav-link btn-logout">
-              Logout
-            </button>
+            <div class="user-section">
+              <span class="username">{{ authStore.user?.username }}</span>
+              <button @click="handleLogout" class="btn-logout">
+                Logout
+              </button>
+            </div>
           </template>
           <template v-else>
             <router-link to="/login" class="nav-link">Login</router-link>
