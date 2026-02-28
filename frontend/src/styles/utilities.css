@@ -1,0 +1,157 @@
+@import './variables.css';
+
+/* Page Title Utility */
+.page-title {
+  color: var(--color-primary);
+  font-size: var(--font-2xl);
+  margin-bottom: var(--spacing-lg);
+  font-weight: 600;
+}
+
+.page-title-large {
+  color: var(--color-primary);
+  font-size: 2.5rem;
+  margin-bottom: var(--spacing-xl);
+  font-weight: 700;
+}
+
+/* Section Title */
+.section-title {
+  color: var(--color-primary);
+  font-size: var(--font-xl);
+  margin-bottom: var(--spacing-md);
+  font-weight: 600;
+}
+
+/* Container Utility */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-xl);
+}
+
+/* Flex Utilities */
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-start {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.flex-end {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.gap-sm {
+  gap: var(--spacing-sm);
+}
+
+.gap-md {
+  gap: var(--spacing-md);
+}
+
+.gap-lg {
+  gap: var(--spacing-lg);
+}
+
+/* Text Utilities */
+.text-center {
+  text-align: center;
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+}
+
+.text-error {
+  color: var(--color-primary);
+  font-size: var(--font-xs);
+}
+
+/* Loading & Empty States */
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-2xl);
+  color: var(--text-secondary);
+}
+
+/* Card Utility */
+.card {
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  padding: var(--spacing-lg);
+}
+
+.card-hover {
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  cursor: pointer;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Grid Utility */
+.grid {
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+.grid-responsive {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+/* Form Input Utility */
+.form-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: var(--font-base);
+  font-family: inherit;
+  transition: border-color var(--transition-normal);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.form-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .grid-responsive {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--spacing-md);
+  }
+}

@@ -1,0 +1,31 @@
+@import '../../styles/variables.css';
+@import '../../styles/utilities.css';
+
+.review-form {
+  margin-top: var(--spacing-xl);
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: var(--font-base);
+  font-family: inherit;
+  transition: border-color var(--transition-normal);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.form-actions {
+  margin-top: var(--spacing-md);
+}
+
+.error-message {
+  margin-bottom: var(--spacing-md);
+}

@@ -1,0 +1,18 @@
+@import '../../styles/variables.css';
+@import '../../styles/utilities.css';
+
+.home {
+  padding-top: var(--spacing-xl);
+}
+
+.header-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  align-items: flex-start;
+}
+
+.movies-grid {
+  margin-top: var(--spacing-lg);
+}

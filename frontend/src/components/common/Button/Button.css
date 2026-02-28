@@ -1,0 +1,78 @@
+@import '../../../styles/variables.css';
+
+.btn {
+  padding: 0.75rem var(--spacing-lg);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition-normal);
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.btn:disabled,
+.btn.btn-loading {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--text-primary);
+}
+
+.btn-primary:hover:not(:disabled):not(.btn-loading) {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover:not(:disabled):not(.btn-loading) {
+  background-color: var(--color-secondary-hover);
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: var(--text-primary);
+}
+
+.btn-danger:hover:not(:disabled):not(.btn-loading) {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  text-decoration: underline;
+  padding: 0;
+  font-weight: normal;
+}
+
+.btn-link:hover:not(:disabled):not(.btn-loading) {
+  text-decoration: none;
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--text-primary);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
