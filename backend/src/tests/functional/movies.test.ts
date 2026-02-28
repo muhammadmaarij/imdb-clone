@@ -9,7 +9,6 @@ describe("Movies API", () => {
   let userId: string;
 
   beforeAll(async () => {
-    // Run migrations or ensure tables exist
     const hashedPassword = await hashPassword("TestPassword123");
     const insertQuery = `
       INSERT INTO users (id, username, email, password, "createdAt", "updatedAt")
