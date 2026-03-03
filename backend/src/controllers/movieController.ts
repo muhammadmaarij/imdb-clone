@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response } from "express";
 import {
   getAllMovies,
   getMovieById,
@@ -6,27 +6,39 @@ import {
   updateMovie,
   deleteMovie,
   searchMovies,
-} from '../services/movieService';
-import { CreateMovieInput, UpdateMovieInput, SearchMovieInput } from '../validators/movieValidator';
-import { MovieCreationAttributes } from '../types/models';
+} from "../services/movieService";
+import {
+  CreateMovieInput,
+  UpdateMovieInput,
+  SearchMovieInput,
+} from "../validators/movieValidator";
+import { MovieCreationAttributes } from "../types/models";
+import { AppError } from "../utils/errors";
 
-export const getMovies = async (_req: Request, res: Response): Promise<void> => {
+export const getMovies = async (req: Request, res: Response): Promise<void> => {
   try {
-    const movies = await getAllMovies();
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    const { movies, pagination } = await getAllMovies(page, limit);
+
     res.status(200).json({
       success: true,
       data: movies,
+      pagination,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch movies',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Failed to fetch movies",
     });
   }
 };
 
-export const getMovie = async (req: Request<{ id: string }>, res: Response): Promise<void> => {
+export const getMovie = async (
+  req: Request<{ id: string }>,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const movie = await getMovieById(id);
@@ -34,7 +46,7 @@ export const getMovie = async (req: Request<{ id: string }>, res: Response): Pro
     if (!movie) {
       res.status(404).json({
         success: false,
-        message: 'Movie not found',
+        message: "Movie not found",
       });
       return;
     }
@@ -46,8 +58,7 @@ export const getMovie = async (req: Request<{ id: string }>, res: Response): Pro
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch movie',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Failed to fetch movie",
     });
   }
 };
@@ -60,7 +71,7 @@ export const createMovieHandler = async (
     if (!req.user) {
       res.status(401).json({
         success: false,
-        message: 'Authentication required',
+        message: "Authentication required",
       });
       return;
     }
@@ -74,12 +85,12 @@ export const createMovieHandler = async (
 
     res.status(201).json({
       success: true,
-      message: 'Movie created successfully',
+      message: "Movie created successfully",
       data: movie,
     });
   } catch (error) {
-    if (error instanceof Error && error.message.includes('already exists')) {
-      res.status(409).json({
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({
         success: false,
         message: error.message,
       });
@@ -88,8 +99,7 @@ export const createMovieHandler = async (
 
     res.status(500).json({
       success: false,
-      message: 'Failed to create movie',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Failed to create movie",
     });
   }
 };
@@ -102,7 +112,7 @@ export const updateMovieHandler = async (
     if (!req.user) {
       res.status(401).json({
         success: false,
-        message: 'Authentication required',
+        message: "Authentication required",
       });
       return;
     }
@@ -112,38 +122,21 @@ export const updateMovieHandler = async (
 
     res.status(200).json({
       success: true,
-      message: 'Movie updated successfully',
+      message: "Movie updated successfully",
       data: movie,
     });
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.message.includes('not found')) {
-        res.status(404).json({
-          success: false,
-          message: error.message,
-        });
-        return;
-      }
-      if (error.message.includes('Unauthorized')) {
-        res.status(403).json({
-          success: false,
-          message: error.message,
-        });
-        return;
-      }
-      if (error.message.includes('already exists')) {
-        res.status(409).json({
-          success: false,
-          message: error.message,
-        });
-        return;
-      }
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+      return;
     }
 
     res.status(500).json({
       success: false,
-      message: 'Failed to update movie',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Failed to update movie",
     });
   }
 };
@@ -156,7 +149,7 @@ export const deleteMovieHandler = async (
     if (!req.user) {
       res.status(401).json({
         success: false,
-        message: 'Authentication required',
+        message: "Authentication required",
       });
       return;
     }
@@ -166,30 +159,20 @@ export const deleteMovieHandler = async (
 
     res.status(200).json({
       success: true,
-      message: 'Movie deleted successfully',
+      message: "Movie deleted successfully",
     });
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.message.includes('not found')) {
-        res.status(404).json({
-          success: false,
-          message: error.message,
-        });
-        return;
-      }
-      if (error.message.includes('Unauthorized')) {
-        res.status(403).json({
-          success: false,
-          message: error.message,
-        });
-        return;
-      }
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+      return;
     }
 
     res.status(500).json({
       success: false,
-      message: 'Failed to delete movie',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Failed to delete movie",
     });
   }
 };
@@ -209,8 +192,7 @@ export const searchMoviesHandler = async (
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to search movies',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Failed to search movies",
     });
   }
 };

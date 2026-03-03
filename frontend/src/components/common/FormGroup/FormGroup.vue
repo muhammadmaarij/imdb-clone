@@ -11,8 +11,6 @@
 </template>
 
 <script setup lang="ts">
-import './FormGroup.css';
-
 interface Props {
   id?: string;
   label?: string;
@@ -25,3 +23,47 @@ withDefaults(defineProps<Props>(), {
   required: false,
 });
 </script>
+
+<style scoped>
+.form-group-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.form-group-label {
+  font-weight: var(--weight-semibold);
+  display: block;
+  color: var(--text-primary);
+  font-size: var(--font-sm);
+  margin-bottom: var(--spacing-xs);
+  letter-spacing: 0.3px;
+}
+
+.required {
+  color: var(--color-primary);
+  margin-left: var(--spacing-xs);
+}
+
+.form-group-hint {
+  color: var(--text-secondary);
+  font-size: var(--font-xs);
+  margin-top: var(--spacing-xs);
+}
+
+.form-group-error {
+  color: var(--color-primary-light);
+  font-size: var(--font-xs);
+  font-weight: var(--weight-medium);
+  margin-top: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.form-group-error::before {
+  content: '⚠';
+  font-size: var(--font-sm);
+}
+</style>

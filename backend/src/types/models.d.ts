@@ -7,7 +7,7 @@ export interface UserAttributes {
   updatedAt?: Date;
 }
 
-export type UserWithoutPassword = Omit<UserAttributes, 'password'>;
+export type UserWithoutPassword = Omit<UserAttributes, "password">;
 
 export interface UserCreationAttributes {
   username: string;
@@ -56,4 +56,16 @@ export interface ReviewCreationAttributes {
 export interface MovieWithRanking extends MovieAttributes {
   reviewCount?: number;
   rank?: number;
+}
+
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface PaginatedMovies {
+  movies: MovieWithRanking[];
+  pagination: PaginationMeta;
 }

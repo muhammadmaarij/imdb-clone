@@ -1,12 +1,28 @@
 import { QueryTypes } from "sequelize";
 import sequelize from "../config/database";
+import config from "../config/env";
 import {
   MovieAttributes,
   MovieCreationAttributes,
   MovieWithRanking,
+  PaginatedMovies,
 } from "../types/models";
+import { NotFoundError, ForbiddenError, ConflictError } from "../utils/errors";
 
-export const getAllMovies = async (): Promise<MovieWithRanking[]> => {
+export const getAllMovies = async (
+  page: number = config.DEFAULT_PAGE,
+  limit: number = config.DEFAULT_LIMIT
+): Promise<PaginatedMovies> => {
+  const safeLimit = Math.min(Math.max(1, limit), config.MAX_LIMIT);
+  const safePage = Math.max(1, page);
+  const offset = (safePage - 1) * safeLimit;
+
+  const [countResult] = (await sequelize.query(
+    `SELECT COUNT(*)::integer AS total FROM movies`,
+    { type: QueryTypes.SELECT }
+  )) as [{ total: number }];
+  const total = countResult?.total || 0;
+
   const query = `
     SELECT 
       m.id,
@@ -33,19 +49,38 @@ export const getAllMovies = async (): Promise<MovieWithRanking[]> => {
       m."createdAt",
       m."updatedAt"
     ORDER BY COUNT(r.id) DESC
+    LIMIT :limit OFFSET :offset
   `;
 
   const results = await sequelize.query(query, {
+    replacements: { limit: safeLimit, offset },
     type: QueryTypes.SELECT,
   });
 
-  return results as MovieWithRanking[];
+  return {
+    movies: results as MovieWithRanking[],
+    pagination: {
+      page: safePage,
+      limit: safeLimit,
+      total,
+      totalPages: Math.ceil(total / safeLimit),
+    },
+  };
 };
 
 export const getMovieById = async (
   id: string
 ): Promise<MovieWithRanking | null> => {
-  const movieQuery = `
+  const query = `
+    WITH ranked_movies AS (
+      SELECT 
+        m.id,
+        COUNT(r.id)::integer AS "reviewCount",
+        RANK() OVER (ORDER BY COUNT(r.id) DESC)::integer AS rank
+      FROM movies m
+      LEFT JOIN reviews r ON r."movieId" = m.id
+      GROUP BY m.id
+    )
     SELECT 
       m.id,
       m.title,
@@ -55,41 +90,25 @@ export const getMovieById = async (
       m."trailerUrl",
       m."userId",
       m."createdAt",
-      m."updatedAt"
+      m."updatedAt",
+      rm."reviewCount",
+      rm.rank
     FROM movies m
+    JOIN ranked_movies rm ON rm.id = m.id
     WHERE m.id = :id
     LIMIT 1
   `;
-  const movies = (await sequelize.query(movieQuery, {
+
+  const results = (await sequelize.query(query, {
     replacements: { id },
     type: QueryTypes.SELECT,
-  })) as MovieAttributes[];
+  })) as MovieWithRanking[];
 
-  if (!Array.isArray(movies) || movies.length === 0) {
+  if (!Array.isArray(results) || results.length === 0) {
     return null;
   }
 
-  const movie = movies[0];
-
-  const reviewCountQuery = `
-    SELECT COUNT(*)::integer AS count
-    FROM reviews
-    WHERE "movieId" = :id
-  `;
-  const [reviewCountResult] = (await sequelize.query(reviewCountQuery, {
-    replacements: { id },
-    type: QueryTypes.SELECT,
-  })) as [{ count: number }];
-  const reviewCount = reviewCountResult?.count || 0;
-
-  const moviesWithRanking = await getAllMovies();
-  const movieRank = moviesWithRanking.findIndex((m) => m.id === id) + 1;
-
-  return {
-    ...movie,
-    reviewCount,
-    rank: movieRank > 0 ? movieRank : undefined,
-  };
+  return results[0];
 };
 
 export const searchMovies = async (
@@ -144,7 +163,7 @@ export const createMovie = async (
   });
 
   if (Array.isArray(existingMovies) && existingMovies.length > 0) {
-    throw new Error("Movie with this title already exists");
+    throw new ConflictError("Movie with this title already exists");
   }
 
   const insertQuery = `
@@ -181,13 +200,13 @@ export const updateMovie = async (
   })) as MovieAttributes[];
 
   if (!Array.isArray(movies) || movies.length === 0) {
-    throw new Error("Movie not found");
+    throw new NotFoundError("Movie not found");
   }
 
   const movie = movies[0];
 
   if (movie.userId !== userId) {
-    throw new Error("Unauthorized: You can only update your own movies");
+    throw new ForbiddenError("You can only update your own movies");
   }
 
   if (movieData.title && movieData.title !== movie.title) {
@@ -200,7 +219,7 @@ export const updateMovie = async (
     });
 
     if (Array.isArray(existingMovies) && existingMovies.length > 0) {
-      throw new Error("Movie with this title already exists");
+      throw new ConflictError("Movie with this title already exists");
     }
   }
 
@@ -229,7 +248,6 @@ export const updateMovie = async (
   }
 
   if (updateFields.length === 0) {
-    // No fields to update, return existing movie
     const fullMovieQuery = `
       SELECT id, title, "releaseDate", description, "posterUrl", "trailerUrl", "userId", "createdAt", "updatedAt"
       FROM movies
@@ -272,13 +290,13 @@ export const deleteMovie = async (
   })) as MovieAttributes[];
 
   if (!Array.isArray(movies) || movies.length === 0) {
-    throw new Error("Movie not found");
+    throw new NotFoundError("Movie not found");
   }
 
   const movie = movies[0];
 
   if (movie.userId !== userId) {
-    throw new Error("Unauthorized: You can only delete your own movies");
+    throw new ForbiddenError("You can only delete your own movies");
   }
 
   const deleteQuery = `DELETE FROM movies WHERE id = :id`;

@@ -1,12 +1,16 @@
-import { Request, Response } from 'express';
+import { Request, Response } from "express";
 import {
   createReview,
   updateReview,
   deleteReview,
   getReviewsByMovieId,
-} from '../services/reviewService';
-import { CreateReviewInput, UpdateReviewInput } from '../validators/reviewValidator';
-import { ReviewCreationAttributes } from '../types/models';
+} from "../services/reviewService";
+import {
+  CreateReviewInput,
+  UpdateReviewInput,
+} from "../validators/reviewValidator";
+import { ReviewCreationAttributes } from "../types/models";
+import { AppError } from "../utils/errors";
 
 export const createReviewHandler = async (
   req: Request<unknown, unknown, CreateReviewInput>,
@@ -16,7 +20,7 @@ export const createReviewHandler = async (
     if (!req.user) {
       res.status(401).json({
         success: false,
-        message: 'Authentication required',
+        message: "Authentication required",
       });
       return;
     }
@@ -30,12 +34,12 @@ export const createReviewHandler = async (
 
     res.status(201).json({
       success: true,
-      message: 'Review created successfully',
+      message: "Review created successfully",
       data: review,
     });
   } catch (error) {
-    if (error instanceof Error && error.message.includes('already reviewed')) {
-      res.status(409).json({
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({
         success: false,
         message: error.message,
       });
@@ -44,8 +48,7 @@ export const createReviewHandler = async (
 
     res.status(500).json({
       success: false,
-      message: 'Failed to create review',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Failed to create review",
     });
   }
 };
@@ -58,7 +61,7 @@ export const updateReviewHandler = async (
     if (!req.user) {
       res.status(401).json({
         success: false,
-        message: 'Authentication required',
+        message: "Authentication required",
       });
       return;
     }
@@ -68,31 +71,21 @@ export const updateReviewHandler = async (
 
     res.status(200).json({
       success: true,
-      message: 'Review updated successfully',
+      message: "Review updated successfully",
       data: review,
     });
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.message.includes('not found')) {
-        res.status(404).json({
-          success: false,
-          message: error.message,
-        });
-        return;
-      }
-      if (error.message.includes('Unauthorized')) {
-        res.status(403).json({
-          success: false,
-          message: error.message,
-        });
-        return;
-      }
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+      return;
     }
 
     res.status(500).json({
       success: false,
-      message: 'Failed to update review',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Failed to update review",
     });
   }
 };
@@ -105,7 +98,7 @@ export const deleteReviewHandler = async (
     if (!req.user) {
       res.status(401).json({
         success: false,
-        message: 'Authentication required',
+        message: "Authentication required",
       });
       return;
     }
@@ -115,30 +108,20 @@ export const deleteReviewHandler = async (
 
     res.status(200).json({
       success: true,
-      message: 'Review deleted successfully',
+      message: "Review deleted successfully",
     });
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.message.includes('not found')) {
-        res.status(404).json({
-          success: false,
-          message: error.message,
-        });
-        return;
-      }
-      if (error.message.includes('Unauthorized')) {
-        res.status(403).json({
-          success: false,
-          message: error.message,
-        });
-        return;
-      }
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+      return;
     }
 
     res.status(500).json({
       success: false,
-      message: 'Failed to delete review',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Failed to delete review",
     });
   }
 };
@@ -158,8 +141,7 @@ export const getMovieReviews = async (
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch reviews',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: "Failed to fetch reviews",
     });
   }
 };

@@ -48,7 +48,6 @@ import SearchBar from '../../components/SearchBar/SearchBar.vue';
 import MovieCard from '../../components/MovieCard/MovieCard.vue';
 import MovieModal from '../../components/MovieModal/MovieModal.vue';
 import Button from '../../components/common/Button/Button.vue';
-import './Home.css';
 
 interface Movie {
   id: string;
@@ -79,3 +78,46 @@ const closeEditModal = (): void => {
   editingMovie.value = null;
 };
 </script>
+
+<style scoped>
+.home {
+  padding-top: var(--spacing-xl);
+  animation: fadeIn var(--transition-normal) ease-out;
+}
+
+.header-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-2xl);
+  align-items: flex-start;
+  position: relative;
+}
+
+.header-section::after {
+  content: '';
+  position: absolute;
+  bottom: calc(-1 * var(--spacing-xl));
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border-color), transparent);
+}
+
+.movies-grid {
+  margin-top: var(--spacing-xl);
+  animation: fadeIn var(--transition-slow) ease-out;
+}
+
+.movies-grid > * {
+  animation: fadeIn var(--transition-normal) ease-out;
+  animation-fill-mode: both;
+}
+
+.movies-grid > *:nth-child(1) { animation-delay: 0.1s; }
+.movies-grid > *:nth-child(2) { animation-delay: 0.2s; }
+.movies-grid > *:nth-child(3) { animation-delay: 0.3s; }
+.movies-grid > *:nth-child(4) { animation-delay: 0.4s; }
+.movies-grid > *:nth-child(5) { animation-delay: 0.5s; }
+.movies-grid > *:nth-child(6) { animation-delay: 0.6s; }
+</style>

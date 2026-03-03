@@ -1,26 +1,23 @@
 import { Sequelize } from "sequelize";
-import dotenv from "dotenv";
+import config from "./env";
 
-dotenv.config();
-
-const dbName = process.env.DB_NAME || "imdb_clone";
-const dbUser = process.env.DB_USER || "postgres";
-const dbPassword = process.env.DB_PASSWORD || "postgres";
-const dbHost = process.env.DB_HOST || "localhost";
-const dbPort = parseInt(process.env.DB_PORT || "5432", 10);
-
-const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
-  host: dbHost,
-  port: dbPort,
-  dialect: "postgres",
-  logging: process.env.NODE_ENV === "development" ? console.log : false,
-  pool: {
-    max: 5,
-    min: 0,
-    acquire: 30000,
-    idle: 10000,
-  },
-});
+const sequelize = new Sequelize(
+  config.DB_NAME,
+  config.DB_USER,
+  config.DB_PASSWORD,
+  {
+    host: config.DB_HOST,
+    port: config.DB_PORT,
+    dialect: "postgres",
+    logging: config.NODE_ENV === "development" ? console.log : false,
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000,
+    },
+  }
+);
 
 export const connectDatabase = async (): Promise<void> => {
   try {

@@ -1,22 +1,29 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
-import dotenv from "dotenv";
+import compression from "compression";
 import { connectDatabase } from "./config/database";
+import config from "./config/env";
+import { AppError } from "./utils/errors";
 import authRoutes from "./routes/auth";
 import movieRoutes from "./routes/movies";
 import reviewRoutes from "./routes/reviews";
 
-dotenv.config();
-
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(
+  cors({
+    origin: config.CORS_ORIGIN,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
-// Routes
+app.use(express.json({ limit: config.BODY_LIMIT }));
+app.use(express.urlencoded({ extended: true, limit: config.BODY_LIMIT }));
+
+app.use(compression());
+
 app.use("/api/auth", authRoutes);
 app.use("/api/movies", movieRoutes);
 app.use("/api/reviews", reviewRoutes);
@@ -29,16 +36,20 @@ app.get("/health", (_req: Request, res: Response) => {
   });
 });
 
-// Error handling middleware
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error("Error:", err);
+  if (err instanceof AppError) {
+    res.status(err.statusCode).json({
+      success: false,
+      message: err.message,
+    });
+    return;
+  }
+
+  console.error("Unexpected error:", err);
   res.status(500).json({
     success: false,
-    message: "Internal server error",
-    error:
-      process.env.NODE_ENV === "development"
-        ? err.message
-        : "Something went wrong",
+    message:
+      config.NODE_ENV === "development" ? err.message : "Internal server error",
   });
 });
 
@@ -54,8 +65,8 @@ app.use((_req: Request, res: Response) => {
 const startServer = async (): Promise<void> => {
   try {
     await connectDatabase();
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+    app.listen(config.PORT, () => {
+      console.log(`Server is running on port ${config.PORT}`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);
@@ -63,7 +74,7 @@ const startServer = async (): Promise<void> => {
   }
 };
 
-if (process.env.NODE_ENV !== "test") {
+if (config.NODE_ENV !== "test" && !process.env.JEST_WORKER_ID) {
   startServer();
 }
 

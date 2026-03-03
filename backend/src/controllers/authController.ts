@@ -1,8 +1,13 @@
 import { Request, Response } from "express";
 import { QueryTypes } from "sequelize";
 import sequelize from "../config/database";
-import { hashPassword, comparePassword, generateToken } from "../services/authService";
+import {
+  hashPassword,
+  comparePassword,
+  generateToken,
+} from "../services/authService";
 import { RegisterInput, LoginInput } from "../validators/authValidator";
+import { UnauthorizedError, ConflictError } from "../utils/errors";
 
 interface UserAttributes {
   id: string;
@@ -29,11 +34,9 @@ export const register = async (
     });
 
     if (Array.isArray(existingUsers) && existingUsers.length > 0) {
-      res.status(400).json({
-        success: false,
-        message: "User with this email or username already exists",
-      });
-      return;
+      throw new ConflictError(
+        "User with this email or username already exists"
+      );
     }
 
     const hashedPassword = await hashPassword(password);
@@ -43,16 +46,16 @@ export const register = async (
       VALUES (gen_random_uuid(), :username, :email, :password, NOW(), NOW())
       RETURNING id, username, email
     `;
-    const [user] = await sequelize.query(insertQuery, {
+    const [user] = (await sequelize.query(insertQuery, {
       replacements: {
         username,
         email,
         password: hashedPassword,
       },
       type: QueryTypes.SELECT,
-    }) as UserAttributes[];
+    })) as UserAttributes[];
 
-    const token = generateToken(user.id, user.email);
+    const token = generateToken(user.id, user.email, user.username);
 
     res.status(201).json({
       success: true,
@@ -67,10 +70,17 @@ export const register = async (
       },
     });
   } catch (error) {
+    if (error instanceof ConflictError) {
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+      return;
+    }
+
     res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
@@ -88,17 +98,13 @@ export const login = async (
       WHERE email = :email 
       LIMIT 1
     `;
-    const users = await sequelize.query(userQuery, {
+    const users = (await sequelize.query(userQuery, {
       replacements: { email },
       type: QueryTypes.SELECT,
-    }) as UserAttributes[];
+    })) as UserAttributes[];
 
     if (!Array.isArray(users) || users.length === 0) {
-      res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
-      return;
+      throw new UnauthorizedError("Invalid email or password");
     }
 
     const user = users[0];
@@ -106,14 +112,10 @@ export const login = async (
     const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
-      res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
-      return;
+      throw new UnauthorizedError("Invalid email or password");
     }
 
-    const token = generateToken(user.id, user.email);
+    const token = generateToken(user.id, user.email, user.username);
 
     res.status(200).json({
       success: true,
@@ -128,10 +130,17 @@ export const login = async (
       },
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+      return;
+    }
+
     res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };

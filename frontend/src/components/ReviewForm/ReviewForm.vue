@@ -52,7 +52,6 @@ import { ref, watch, computed } from "vue";
 import api from "../../services/api";
 import FormGroup from "../common/FormGroup/FormGroup.vue";
 import Button from "../common/Button/Button.vue";
-import "./ReviewForm.css";
 
 interface Review {
   id: string;
@@ -131,3 +130,50 @@ const handleSubmit = async (): Promise<void> => {
   }
 };
 </script>
+
+<style scoped>
+.review-form {
+  margin-top: var(--spacing-xl);
+  padding: var(--spacing-xl);
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-md);
+}
+
+.review-form .section-title {
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-actions {
+  margin-top: var(--spacing-lg);
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: flex-end;
+}
+
+.error-message {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: rgba(229, 9, 20, 0.1);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  color: var(--color-primary-light);
+  font-size: var(--font-sm);
+  font-weight: var(--weight-medium);
+}
+
+.review-form select.form-input {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--spacing-md) center;
+  padding-right: 2.5rem;
+}
+
+.review-form select.form-input:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23e50914' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+}
+</style>

@@ -1,6 +1,7 @@
 import { QueryTypes } from "sequelize";
 import sequelize from "../config/database";
 import { ReviewAttributes, ReviewCreationAttributes } from "../types/models";
+import { NotFoundError, ForbiddenError, ConflictError } from "../utils/errors";
 
 export const createReview = async (
   reviewData: ReviewCreationAttributes
@@ -19,7 +20,7 @@ export const createReview = async (
   });
 
   if (Array.isArray(existingReviews) && existingReviews.length > 0) {
-    throw new Error("You have already reviewed this movie");
+    throw new ConflictError("You have already reviewed this movie");
   }
 
   const insertQuery = `
@@ -54,13 +55,13 @@ export const updateReview = async (
   })) as ReviewAttributes[];
 
   if (!Array.isArray(reviews) || reviews.length === 0) {
-    throw new Error("Review not found");
+    throw new NotFoundError("Review not found");
   }
 
   const review = reviews[0];
 
   if (review.userId !== userId) {
-    throw new Error("Unauthorized: You can only update your own reviews");
+    throw new ForbiddenError("You can only update your own reviews");
   }
 
   const updateFields: string[] = [];
@@ -76,7 +77,6 @@ export const updateReview = async (
   }
 
   if (updateFields.length === 0) {
-    // No fields to update, return existing review
     const fullReviewQuery = `
       SELECT id, "movieId", "userId", rating, comment, "createdAt", "updatedAt"
       FROM reviews
@@ -119,13 +119,13 @@ export const deleteReview = async (
   })) as ReviewAttributes[];
 
   if (!Array.isArray(reviews) || reviews.length === 0) {
-    throw new Error("Review not found");
+    throw new NotFoundError("Review not found");
   }
 
   const review = reviews[0];
 
   if (review.userId !== userId) {
-    throw new Error("Unauthorized: You can only delete your own reviews");
+    throw new ForbiddenError("You can only delete your own reviews");
   }
 
   const deleteQuery = `DELETE FROM reviews WHERE id = :id`;
