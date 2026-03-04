@@ -23,32 +23,14 @@ export const getAllMovies = async (
   )) as [{ total: number }];
   const total = countResult?.total || 0;
 
+  // rank is derived at read time — RANK() OVER the indexed reviewCount column
   const query = `
     SELECT 
-      m.id,
-      m.title,
-      m."releaseDate",
-      m.description,
-      m."posterUrl",
-      m."trailerUrl",
-      m."userId",
-      m."createdAt",
-      m."updatedAt",
-      COUNT(r.id)::integer AS "reviewCount",
-      RANK() OVER (ORDER BY COUNT(r.id) DESC)::integer AS rank
-    FROM movies m
-    LEFT JOIN reviews r ON r."movieId" = m.id
-    GROUP BY 
-      m.id,
-      m.title,
-      m."releaseDate",
-      m.description,
-      m."posterUrl",
-      m."trailerUrl",
-      m."userId",
-      m."createdAt",
-      m."updatedAt"
-    ORDER BY COUNT(r.id) DESC
+      id, title, "releaseDate", description, "posterUrl", "trailerUrl",
+      "userId", "reviewCount", "createdAt", "updatedAt",
+      RANK() OVER (ORDER BY "reviewCount" DESC)::integer AS rank
+    FROM movies
+    ORDER BY "reviewCount" DESC
     LIMIT :limit OFFSET :offset
   `;
 
@@ -72,29 +54,11 @@ export const getMovieById = async (
   id: string
 ): Promise<MovieWithRanking | null> => {
   const query = `
-    WITH ranked_movies AS (
-      SELECT 
-        m.id,
-        COUNT(r.id)::integer AS "reviewCount",
-        RANK() OVER (ORDER BY COUNT(r.id) DESC)::integer AS rank
-      FROM movies m
-      LEFT JOIN reviews r ON r."movieId" = m.id
-      GROUP BY m.id
-    )
     SELECT 
-      m.id,
-      m.title,
-      m."releaseDate",
-      m.description,
-      m."posterUrl",
-      m."trailerUrl",
-      m."userId",
-      m."createdAt",
-      m."updatedAt",
-      rm."reviewCount",
-      rm.rank
+      m.id, m.title, m."releaseDate", m.description, m."posterUrl", m."trailerUrl",
+      m."userId", m."reviewCount", m."createdAt", m."updatedAt",
+      (SELECT COUNT(*)::integer + 1 FROM movies WHERE "reviewCount" > m."reviewCount") AS rank
     FROM movies m
-    JOIN ranked_movies rm ON rm.id = m.id
     WHERE m.id = :id
     LIMIT 1
   `;
@@ -116,31 +80,12 @@ export const searchMovies = async (
 ): Promise<MovieWithRanking[]> => {
   const query = `
     SELECT 
-      m.id,
-      m.title,
-      m."releaseDate",
-      m.description,
-      m."posterUrl",
-      m."trailerUrl",
-      m."userId",
-      m."createdAt",
-      m."updatedAt",
-      COUNT(r.id)::integer AS "reviewCount",
-      RANK() OVER (ORDER BY COUNT(r.id) DESC)::integer AS rank
+      m.id, m.title, m."releaseDate", m.description, m."posterUrl", m."trailerUrl",
+      m."userId", m."reviewCount", m."createdAt", m."updatedAt",
+      (SELECT COUNT(*)::integer + 1 FROM movies WHERE "reviewCount" > m."reviewCount") AS rank
     FROM movies m
-    LEFT JOIN reviews r ON r."movieId" = m.id
     WHERE m.title ILIKE :searchQuery
-    GROUP BY 
-      m.id,
-      m.title,
-      m."releaseDate",
-      m.description,
-      m."posterUrl",
-      m."trailerUrl",
-      m."userId",
-      m."createdAt",
-      m."updatedAt"
-    ORDER BY COUNT(r.id) DESC
+    ORDER BY m."reviewCount" DESC
   `;
 
   const results = await sequelize.query(query, {
@@ -167,9 +112,9 @@ export const createMovie = async (
   }
 
   const insertQuery = `
-    INSERT INTO movies (id, title, "releaseDate", description, "posterUrl", "trailerUrl", "userId", "createdAt", "updatedAt")
-    VALUES (gen_random_uuid(), :title, :releaseDate, :description, :posterUrl, :trailerUrl, :userId, NOW(), NOW())
-    RETURNING id, title, "releaseDate", description, "posterUrl", "trailerUrl", "userId", "createdAt", "updatedAt"
+    INSERT INTO movies (id, title, "releaseDate", description, "posterUrl", "trailerUrl", "userId", "reviewCount", "createdAt", "updatedAt")
+    VALUES (gen_random_uuid(), :title, :releaseDate, :description, :posterUrl, :trailerUrl, :userId, 0, NOW(), NOW())
+    RETURNING id, title, "releaseDate", description, "posterUrl", "trailerUrl", "userId", "reviewCount", "createdAt", "updatedAt"
   `;
   const [movie] = (await sequelize.query(insertQuery, {
     replacements: {
@@ -249,7 +194,8 @@ export const updateMovie = async (
 
   if (updateFields.length === 0) {
     const fullMovieQuery = `
-      SELECT id, title, "releaseDate", description, "posterUrl", "trailerUrl", "userId", "createdAt", "updatedAt"
+      SELECT id, title, "releaseDate", description, "posterUrl", "trailerUrl",
+             "userId", "reviewCount", "createdAt", "updatedAt"
       FROM movies
       WHERE id = :id
       LIMIT 1
@@ -267,7 +213,8 @@ export const updateMovie = async (
     UPDATE movies
     SET ${updateFields.join(", ")}
     WHERE id = :id
-    RETURNING id, title, "releaseDate", description, "posterUrl", "trailerUrl", "userId", "createdAt", "updatedAt"
+    RETURNING id, title, "releaseDate", description, "posterUrl", "trailerUrl",
+              "userId", "reviewCount", "createdAt", "updatedAt"
   `;
   const [updatedMovie] = (await sequelize.query(updateQuery, {
     replacements,

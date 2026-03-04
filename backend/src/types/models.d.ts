@@ -23,6 +23,7 @@ export interface MovieAttributes {
   posterUrl: string;
   trailerUrl: string;
   userId: string;
+  reviewCount: number; // pre-calculated column, maintained by PG trigger
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -53,9 +54,9 @@ export interface ReviewCreationAttributes {
   comment: string;
 }
 
+// rank is derived at read time from the indexed reviewCount column — not stored.
 export interface MovieWithRanking extends MovieAttributes {
-  reviewCount?: number;
-  rank?: number;
+  rank: number;
 }
 
 export interface PaginationMeta {
